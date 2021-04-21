@@ -1,0 +1,231 @@
+---
+title: "Consumo de cerveja no ano de 2019"
+author: "Lucas Melo"
+date: '04.2021'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+## Introdução
+
+ No decorrer do ano de 2019, foram coletados dados sobre a quantidade de cerveja consumida por dia em uma dada cidade. Utilizando o software gratuito [RStudio](https://www.rstudio.com/), na linguagem de programação [R](https://www.rstudio.com/), foram construídas algumas medidas  com a finalidade de descrever o comportamente do consumo de cerveja no local onde foi aplicada a pesquisa.  
+  
+  
+## Objetivo
+
+Queremos identificar os períodos e as condiçõees em que os habitantes de certa cidade consomem mais  cerveja, levando em consideração o dia da semana, festividades e clima, por exemplo.
+
+## Métodos
+
+Este documento foi, integralmente, escrito em RMarkdown. Para iniciar, iremos fazer a importação da nossa base de dados. No R, nosso banco recebe o nome de **dados**. O comando `kable`, pertencente à biblioteca `knitr`, nos retorna uma tabela simples, embora dê uma mellhor visualização quando comparado à resposta direta do comando `head`.  
+ 
+ Como a variável **Data**, na nossa base de dados, não está com o formato de data (verificar utilizando o comando `class()`) fizemos uma pequena recodificação utilizando o comando `dmy()`, presente na biblioteca `lubridate`. Quando falamos de criação de gráficos, o `ggplot2` é uma biblioteca bem interessante e completado pra isto, como também traz muitas ferramentas de personalização, que devem ser adicionadas, comumente, com um **+**, como por exemplo o `ggtitle` que adiciona um título ao seu gráfico
+
+``` {r dados, warning = FALSE, message = FALSE}
+
+library(knitr)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+
+dados <- read.csv2("~/R/consumo_cerveja.csv")
+dados$Data<- dmy(paste(dados$Data))
+kable(head(dados))
+
+```
+
+ Na seção de correlação, foi utilizado tanto o o coeficiente de correlação de Pearson, quanto o de Spearman. O coeficiente de correlação de Pearson consiste em avaliar a relação entre duas variáveis quantitativas, de modo que essa relação seja linear, nos retornando um valor entre -1 e 1. Já o de Spearman, não exige que essa relação seja linear, nem requer que as variáveis sejam apenas quantitativas, podendo realizar o teste utilizando variáveis ordinais. O coeficiente de Spearman também mede uma relação que varia entre -1 e 1.
+
+
+## Resultados e discussões
+### Medidas de posição e dispersão
+
+ Utilizaremos o comando `summary`para gerar algumas medidas de posição sobre o consumo anual de cerveja. Este comando nos retorna, por exemplo, a média dos dados indicados, como também os valores de mínimo e máximo. O comando `ggplot` nos retorna, por default, um gráfico de dispersão.   Em vista disso, temos que foram consumidos, em média, 25401 litros de cerveja no ano de 2019 havendo, no mínimo, um consumo de 14343 litros por dia.
+
+ Ao analisar o gráfico de pontos, vemos uma baixa no consumo entre os meses de abril e setembro.
+
+```{r medidas de posição e dispersão}
+
+summary(dados$Consumo.de.cerveja..litros.)
+
+```
+  
+```{r plot anual, warning=FALSE, message=FALSE}
+
+library(ggplot2)
+ggplot(mapping = aes(dados$Data,dados$Consumo.de.cerveja..litros.)) +
+   geom_point()  + xlab("Período do ano") + ylab("Consumo de cerveja") + ggtitle("Consumo de cerveja durante o ano de 2019") + theme(plot.title = element_text(hjust = 0.5)) + geom_smooth(method = "loess")
+
+
+```
+
+ Afim de uma análise mais detalhada, vamos separar este ano em períodos trimestrais, assim podemos ver em qual período do ano se consome mais cerveja nessa cidade. Para isso, usaremos o comando `dados[x,y]` no qual **x** refere-se às linhas do banco, podendo ser do tipo 1:5 (da linha 1 até a linha 5) ou apenas indicando uma única linha, igualmente para o **y**. Por exemplo, `dados[1,2:4]` que retorna as observações da linha 1 na coluna 2, 3 e 4.
+ 
+ Os dados foram divididos em 4 grupos, de modo que cada grupo contenha mais ou menos 90 dias corridos, totalizando 4 trimestres. Feito isso, podemos ver que no 4º trimestre do ano, compreendendo o período de outubro à dezembro, é o período que se mais consomiu cerveja no ano de 2019 contabilizando, em média, 26878 litros/dia, seguido pelo 1º trimestre do ano que consome, em média, 26489 litros/dia de cerveja. Os dias de menos consumo, correspondem aos dias entre os meses de abril à junho sendo este, em média, 25713 litros/dia. Ademais, a diferente entre o período de maior consumo e menor consumo é de pouco mais de 1000 litros/dia.  
+   
+1º trimestre   
+
+```{r 1º tri}
+summary(dados[1:90,7])
+```
+  
+2º trimestre  
+
+```{r 2º tri, echo = FALSE}
+summary(dados[91:181,7])
+```
+  
+3º trimestre  
+```{r 3º tri, echo = FALSE}
+summary(dados[182:272,7])
+```
+  
+4º trimestre  
+```{r 4º tri, echo = FALSE}
+
+summary(dados[272:365,7])
+
+```
+  
+  
+
+Vamos verificar agora a variabilidade dos nossos dados, ou seja, como o consumo  de cerveja varia no decorrer dos dias, tanto trimestral quando anualmente.
+  
+  
+Anualmente:  
+```{r variabilidade anual, warning=FALSE, message=FALSE}
+
+sd <- sd(dados$Consumo.de.cerveja..litros.)
+
+
+```
+  
+sd: `r sd`
+  
+  
+Por trimestre:
+Considere sd1 como sendo o desvio padrão do 1º trimestre, sd2 do 2º e assim até o 4º trimestre.
+
+
+```{r variabilidade trimestral, warning=FALSE, message=FALSE}
+
+sd1<-sd(dados[1:90,7])
+sd2<-sd(dados[91:181,7])
+sd3<-sd(dados[182:272,7])
+sd4<-sd(dados[273:365,7])
+
+```
+sd1: `r sd1`  
+sd2: `r sd2`  
+sd3: `r sd3`  
+sd4: `r sd4`
+
+Tem-se, então, que no 4º semestre o consumo de cerveja é mais homogênio, ou seja, o consumo diário está mais próximos da média que nos demais trimestres do ano, no qual há uma variabilidade maior. Ademais, a variabilidade do consumo no 3º semestre mostra que este é o período do ano no qual os valores mais distoam da média.
+  
+
+
+### Correlações
+
+Vamos estabelecer algumas relações a serem testadas. Queremos ver o quão o consumo de cerveja depende de outros fatores, tais como o clima ser chuvoso ou não, ser fim de semana ou não e se a temperatura média do dia tem algum tipo de influência sobre tal consumo.  
+  
+* Consumo de cerveja por clima
+
+Primeiramente iremos verificar algumas medidadas de posição, para termos uma idéia de como o clima se comporta no decorrer do ano.
+
+```{r precipitacao}
+summary(dados$Precipitacao..mm.)
+sd_p <- sd(dados$Precipitacao..mm.)
+sd_p
+```
+
+A partir dessas medidas, podemos ver que em 50% dos dias do ano não houve chuva e que, em média, a precipitação é de 5,197mm por dia, além disso, em 75% dos dias desse ano as chuvas alcançaram, no máximo, 3,2 mm. Porém, com o desvio padrão igual a `r sd_p`, consideravelmente alto, percebemos que pode haver muitos valores discrepantes durante o ano e, como sabemos, a média é uma medida muito sensível à observações atípicas. Verificando graficamente, vemos que na grande maioria dos dias a precipitação é menor que 20mm e que os maiores valores da precipitação está nos 4 primeiro e quatro últimos meses.
+
+```{r precipitacao no ano, warning=FALSE, message=FALSE}
+
+
+ggplot(mapping = aes(dados$Data ,dados$Precipitacao..mm.)) +
+   geom_point() + xlab("Período do ano") + ylab("Precipitação de chuva no dia") +ggtitle("Precipitação de chuva durante o ano de 2019")+ theme(plot.title = element_text(hjust = 0.5)) + geom_smooth(method = "gam")
+
+```
+  
+Como podemos ver a seguir, parece não haver uma relação linear significativa entre o consumo de cerveja com a precipitação de chuva, o que mostra a correlação de Pearson medindo -0,193. Ademais, o gráfico nos diz que todos os dias no qual o consumo de cerveja foi maior que 30000 a precipitação foi menor que 25mm, além disso, os dias de maior consumo são, de fato, os dias que não choveu ou ouve uma precipitação muito baixa.
+
+```{r concumo por precipitacao, echo=FALSE, warning=FALSE, message=FALSE}
+
+ggplot(mapping = aes(dados$Precipitacao..mm.,dados$Consumo.de.cerveja..litros.)) +
+   geom_point() + xlab("Precipitação de chuva por dia") + ylab("Consumo de cerveja") +ggtitle("Consumo de cerveja por precipitação de chuva")+ theme(plot.title = element_text(hjust = 0.5)) + geom_smooth(method = "gam")
+
+```
+
+```{r correlação}
+
+cor( dados$Consumo.de.cerveja..litros.,dados$Precipitacao..mm., method = "pearson")
+
+```
+
+* Consumo de cerveja por temperatura
+
+
+A temperatura anual média é de 21,29º  C, no qual em 75% do dias, a temperatura esteve abaixo de 23,29º C. A temperatura média anual tende a descrescer até o mês de julho, o qual contém menores temperaturas médias (dos dias), e começa a subir novamente após o mês de julho, semelhante ao comportamento do consumo de cerveja.
+
+```{r temperatura}
+summary(dados$Temperatura.Media..C.)
+
+```
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+ggplot(mapping = aes(dados$Data,dados$Temperatura.Media..C.)) +
+   geom_point() + ylab("Temperatura média por dia") + xlab("Período do ano") +ggtitle("Temperaturas médias durante o ano de 2019")+ theme(plot.title = element_text(hjust = 0.5)) + geom_smooth(method = "gam")
+
+```
+
+
+ 
+ Ao fazermos o consumo de cerveja por temperatura média, parece haver uma considerável relação linear positiva entre essas duas variáveis, ou seja, tende-se a consumir mais cerveja ao passo que a temperatura média é elevada.
+
+
+```{r, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+ggplot(mapping = aes(dados$Temperatura.Media..C.,dados$Consumo.de.cerveja..litros.)) +
+   geom_point() +
+   geom_smooth(method = "lm") + xlab("Temperatura média") + ylab("Consumo de cerveja") +ggtitle("Consumo de cerveja por temperatura média")+ theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+* Consumo de cerveja no fim de semana
+
+Criamos um `data.frame` agrupando a variável **Final.de.Semana**, já que recebe 1 (é fim de semana) e 0 (não é fim de semana), e uma segunda variável contendo a média do conosumo de cerveja. Feito isso, foram feitas algumas recodificações afim de facilitar nossa análise.
+
+Visto na tabela, temos que aos fins de semana o consumo médio é por volta de 9,3% a mais que nos dias de semana, equivalendo a pouco mais de 4924 litros, isso anualemte.
+
+
+```{r}
+
+consumo_fds <- dados %>%  group_by(Final.de.Semana )%>% summarise(mean(Consumo.de.cerveja..litros.))
+
+consumo_fds$Final.de.Semana[consumo_fds$Final.de.Semana == 1] <- "Fim de semana"
+consumo_fds$Final.de.Semana[consumo_fds$Final.de.Semana == 0] <- "Dia de semana"
+
+names(consumo_fds)[grep('Final.de.Semana', names(consumo_fds))] <- 'Classificação'
+kable(consumo_fds)
+
+```
+
+Aplicando o coeficiente de correlação de Spearman, temos uma relação positiva moderada entre o consumo de cerveja no fim de semana ou em dia de semana. O que significa que se consome, razoavelmente, mais cerveja aos fins de semana.
+
+```{r}
+
+cor(dados$Final.de.Semana, dados$Consumo.de.cerveja..litros., method = "spearman")
+```
+
+
+
+
+
+## Conclusão
+
+
+  Vimos que os últimos meses do ano são os meses no qual, em média, se consome mais cerveja na cidade em questão, além de haver uma maior homogeneidade em tal consumo, seguidamente do 1º trimestre do ano. Com relação à precipitação de chuva, não temos uma relação linear considerável, ou seja, não há evidências o suficiênte para dizer que em dias mais chuvosos o consumo de cerveja é menos, e visse-versa. Ademais, a temperatura média dos dias dessa dada cidade parece estar linearmente relacionada com o consumo de cerveja. Então, em dias no qual a temperatura está mais elevada, tende-se a ser consumido uma maior quantidade de cerveja, assim como no fim de semana, em que é consumido mais do que em dias de semana, salvo alguns outliers, sendo estes possíveis feriados.
